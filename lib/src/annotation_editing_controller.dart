@@ -9,7 +9,7 @@ class AnnotationEditingController extends TextEditingController {
   // Generate the Regex pattern for matching all the suggestions in one.
   AnnotationEditingController(this._mapping)
       : _pattern = _mapping.keys.isNotEmpty
-            ? "(${_mapping.keys.map((key) => RegExp.escape(key)).join('|')})"
+            ? _calcRegExp(_mapping.keys.toList())
             : null;
 
   /// Can be used to get the markup from the controller directly.
@@ -51,11 +51,12 @@ class AnnotationEditingController extends TextEditingController {
   set mapping(Map<String, Annotation> _mapping) {
     this._mapping = _mapping;
 
-    _pattern = "(${_mapping.keys.map((key) => RegExp.escape(key)).join('|')})";
+    _pattern = _calcRegExp(_mapping.keys.toList());
   }
 
   @override
-  TextSpan buildTextSpan({BuildContext? context, TextStyle? style, bool? withComposing}) {
+  TextSpan buildTextSpan(
+      {BuildContext? context, TextStyle? style, bool? withComposing}) {
     var children = <InlineSpan>[];
 
     if (_pattern == null || _pattern == '()') {
@@ -91,4 +92,10 @@ class AnnotationEditingController extends TextEditingController {
 
     return TextSpan(style: style, children: children);
   }
+}
+
+String _calcRegExp(List<String> keys) {
+  // Preferential matching of long characters
+  keys = keys..sort((a, b) => (b.length - a.length).sign);
+  return "(${(keys).map((key) => RegExp.escape(key)).join('|')})";
 }
